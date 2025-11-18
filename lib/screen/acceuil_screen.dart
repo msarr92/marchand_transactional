@@ -226,6 +226,7 @@ class AcceuilScreen extends StatelessWidget {
             children: [
               _buildSimpleStat('Entrées', '45 000 F', Icons.arrow_downward, Colors.green),
               _buildSimpleStat('Sorties', '15 000 F', Icons.arrow_upward, Colors.red),
+              _buildSimpleStat('Disponible', '110 750 F', Icons.account_balance, Colors.orange),
             ],
           ),
         ],
@@ -249,7 +250,7 @@ class AcceuilScreen extends StatelessWidget {
           value,
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -289,6 +290,15 @@ class AcceuilScreen extends StatelessWidget {
                 Icons.payment,
                 const Color(0xFF4CAF50),
                 onTap: () => _receivePayment(context),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildBigActionButton(
+                'Transférer\nArgent',
+                Icons.account_balance_wallet,
+                const Color(0xFFFF9800),
+                onTap: () => _transferToPersonalAccount(context),
               ),
             ),
           ],
@@ -444,8 +454,6 @@ class AcceuilScreen extends StatelessWidget {
     );
   }
 
-
-
   Widget _buildEmptyState(String message, IconData icon) {
     return Container(
       padding: const EdgeInsets.all(32),
@@ -542,6 +550,265 @@ class AcceuilScreen extends StatelessWidget {
             ),
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('ENTRER MONTANT'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _transferToPersonalAccount(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          double transferAmount = 0.0;
+          final List<Map<String, dynamic>> personalAccounts = [
+            {
+              'name': 'Compte Orange Money',
+              'number': '77 123 45 67',
+              'icon': Icons.phone_android,
+              'color': Colors.orange,
+            },
+            {
+              'name': 'Compte Free Money',
+              'number': '76 987 65 43',
+              'icon': Icons.phonelink,
+              'color': Colors.green,
+            },
+            {
+              'name': 'Compte Wave',
+              'number': '70 555 44 33',
+              'icon': Icons.account_balance_wallet,
+              'color': Colors.blue,
+            },
+          ];
+
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.account_balance_wallet, color: Color(0xFFFF9800), size: 24),
+                      SizedBox(width: 10),
+                      Text(
+                        'Transférer vers mon compte',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A237E),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Sélection du compte
+                  const Text(
+                    'Choisir le compte:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A237E),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  ...personalAccounts.map((account) =>
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[50],
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(account['icon'], color: account['color']),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    account['name'],
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                  Text(
+                                    account['number'],
+                                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                          ],
+                        ),
+                      ),
+                  ).toList(),
+
+                  const SizedBox(height: 20),
+
+                  // Champ de montant
+                  const Text(
+                    'Montant à transférer:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A237E),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: 'Entrez le montant',
+                        suffixText: 'FCFA',
+                      ),
+                      keyboardType: TextInputType.number,
+                      onChanged: (value) {
+                        transferAmount = double.tryParse(value) ?? 0.0;
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+                  Text(
+                    'Solde disponible: 125 750 FCFA',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // Boutons d'action
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'ANNULER',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (transferAmount > 0) {
+                              Navigator.of(context).pop();
+                              _showTransferConfirmation(context, transferAmount);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF9800),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'TRANSFÉRER',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showTransferConfirmation(BuildContext context, double amount) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 10),
+            Text('Transfert Réussi'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.verified, size: 60, color: Colors.green),
+            const SizedBox(height: 16),
+            Text(
+              '${amount.toInt()} FCFA',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A237E),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'ont été transférés vers votre compte Orange Money',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.receipt, color: Colors.green),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Reçu disponible dans Historique',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1A237E),
+              ),
+              child: const Text('TERMINER'),
+            ),
           ),
         ],
       ),

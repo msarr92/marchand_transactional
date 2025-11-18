@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:marchand/screen/acceuil_screen.dart';
+import 'package:marchand/screen/transaction_screen.dart';
 
 
 class BottomNavigation extends StatefulWidget {
@@ -14,7 +15,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
 
   final List<Widget> _pages = [
     const AcceuilScreen(),
-    // const TransactionsPage(),
+    const TransactionScreen(),
     // const QrCodePage(),
     // const SettingsPage(),
   ];
@@ -56,11 +57,11 @@ class _BottomNavigationState extends State<BottomNavigation> {
             activeIcon: Icon(Icons.receipt_long),
             label: 'Transactions',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_outlined),
-            activeIcon: Icon(Icons.qr_code),
-            label: 'QR Code',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.qr_code_outlined),
+          //   activeIcon: Icon(Icons.qr_code),
+          //   label: 'QR Code',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings_outlined),
             activeIcon: Icon(Icons.settings),
