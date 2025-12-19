@@ -11,6 +11,18 @@ class _TransactionScreenState extends State<TransactionScreen> {
   String _selectedFilter = 'Toutes';
   final List<String> _filters = ['Toutes', 'Reçus', 'Retraits', 'Transferts'];
 
+  // Utiliser les mêmes couleurs que AcceuilScreen
+  static const Color primaryColor = Color(0xFF2563EB); // Bleu vif
+  static const Color secondaryColor = Color(0xFF059669); // Vert émeraude
+  static const Color accentColor = Color(0xFFEA580C); // Orange vif
+  static const Color backgroundLight = Color(0xFFF0F9FF); // Bleu très clair
+  static const Color surfaceWhite = Color(0xFFFFFFFF); // Surface blanche
+  static const Color textDark = Color(0xFF0F172A); // Texte foncé
+  static const Color textGray = Color(0xFF475569); // Texte secondaire
+  static const Color successGreen = Color(0xFF059669);
+  static const Color errorRed = Color(0xFFDC2626);
+  static const Color warningOrange = Color(0xFFEA580C);
+
   // Données simulées des transactions
   final List<Map<String, dynamic>> _allTransactions = [
     {
@@ -19,8 +31,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 15000,
       'type': 'paiement',
       'date': '2024-01-17 10:30',
-      'icon': Icons.arrow_downward,
-      'color': Color(0xFF4CAF50),
+      'icon': Icons.arrow_circle_down_rounded,
+      'color': successGreen,
       'typeText': 'Paiement reçu',
       'status': 'success',
       'account': 'Orange Money',
@@ -31,8 +43,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 7500,
       'type': 'retrait',
       'date': '2024-01-17 11:45',
-      'icon': Icons.arrow_upward,
-      'color': Color(0xFFF44336),
+      'icon': Icons.arrow_circle_up_rounded,
+      'color': errorRed,
       'typeText': 'Retrait compte',
       'status': 'success',
       'account': 'Compte Principal',
@@ -43,8 +55,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 25000,
       'type': 'paiement',
       'date': '2024-01-16 14:20',
-      'icon': Icons.arrow_downward,
-      'color': Color(0xFF4CAF50),
+      'icon': Icons.arrow_circle_down_rounded,
+      'color': successGreen,
       'typeText': 'Paiement reçu',
       'status': 'success',
       'account': 'Wave',
@@ -55,8 +67,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 18000,
       'type': 'transfert',
       'date': '2024-01-16 09:15',
-      'icon': Icons.swap_horiz,
-      'color': Color(0xFF2196F3),
+      'icon': Icons.swap_horiz_rounded,
+      'color': primaryColor,
       'typeText': 'Transfert envoyé',
       'status': 'success',
       'account': 'Free Money',
@@ -67,8 +79,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 12000,
       'type': 'retrait',
       'date': '2024-01-15 16:40',
-      'icon': Icons.arrow_upward,
-      'color': Color(0xFFF44336),
+      'icon': Icons.arrow_circle_up_rounded,
+      'color': errorRed,
       'typeText': 'Retrait compte',
       'status': 'success',
       'account': 'Compte Principal',
@@ -79,8 +91,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 30000,
       'type': 'paiement',
       'date': '2024-01-15 08:20',
-      'icon': Icons.arrow_downward,
-      'color': Color(0xFF4CAF50),
+      'icon': Icons.arrow_circle_down_rounded,
+      'color': successGreen,
       'typeText': 'Paiement reçu',
       'status': 'success',
       'account': 'Orange Money',
@@ -91,8 +103,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 15000,
       'type': 'paiement',
       'date': '2024-01-14 13:30',
-      'icon': Icons.arrow_downward,
-      'color': Color(0xFF4CAF50),
+      'icon': Icons.arrow_circle_down_rounded,
+      'color': successGreen,
       'typeText': 'Paiement reçu',
       'status': 'success',
       'account': 'Wave',
@@ -103,8 +115,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 8000,
       'type': 'transfert',
       'date': '2024-01-14 17:15',
-      'icon': Icons.swap_horiz,
-      'color': Color(0xFF2196F3),
+      'icon': Icons.swap_horiz_rounded,
+      'color': primaryColor,
       'typeText': 'Transfert envoyé',
       'status': 'pending',
       'account': 'Orange Money',
@@ -115,8 +127,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 22000,
       'type': 'paiement',
       'date': '2024-01-13 11:00',
-      'icon': Icons.arrow_downward,
-      'color': Color(0xFF4CAF50),
+      'icon': Icons.arrow_circle_down_rounded,
+      'color': successGreen,
       'typeText': 'Paiement reçu',
       'status': 'success',
       'account': 'Free Money',
@@ -127,8 +139,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'amount': 5000,
       'type': 'retrait',
       'date': '2024-01-13 15:45',
-      'icon': Icons.arrow_upward,
-      'color': Color(0xFFF44336),
+      'icon': Icons.arrow_circle_up_rounded,
+      'color': errorRed,
       'typeText': 'Retrait compte',
       'status': 'success',
       'account': 'Compte Principal',
@@ -212,65 +224,102 @@ class _TransactionScreenState extends State<TransactionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text(
-          'Transactions',
-          style: TextStyle(
-            color: Color(0xFF1A237E),
-            fontWeight: FontWeight.bold,
-          ),
+      backgroundColor: backgroundLight,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Statistiques rapides (même style que la carte solde)
+                    _buildQuickStats(),
+                    const SizedBox(height: 25),
+
+                    // Filtres
+                    _buildFilterChips(),
+                    const SizedBox(height: 25),
+
+                    // Transactions
+                    _buildTransactionsSection(),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.search, color: Color(0xFF1A237E)),
-            onPressed: _showSearchDialog,
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: Color(0xFF1A237E)),
-            onPressed: _showFilterOptions,
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Statistiques rapides
-          _buildQuickStats(),
-
-          // Filtres
-          _buildFilterChips(),
-
-          // Liste des transactions
-          Expanded(
-            child: _buildTransactionsList(),
-          ),
-        ],
       ),
     );
   }
 
+
+
   Widget _buildQuickStats() {
     return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+        ),
+        borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: primaryColor.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _buildStatItem('Reçus', _totalReceived, Icons.arrow_downward, Colors.green),
-          _buildStatItem('Retraits', _totalWithdrawn, Icons.arrow_upward, Colors.red),
-          _buildStatItem('Transferts', _totalTransferred, Icons.swap_horiz, Colors.blue),
+          // Titre
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Résumé des Transactions',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.9),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.bar_chart_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Statistiques
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatItem('Reçus', _totalReceived, Icons.trending_up_rounded, successGreen),
+                _buildStatItem('Retraits', _totalWithdrawn, Icons.trending_down_rounded, errorRed),
+                _buildStatItem('Transferts', _totalTransferred, Icons.swap_horiz_rounded, accentColor),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -282,26 +331,25 @@ class _TransactionScreenState extends State<TransactionScreen> {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
+            color: color.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: color, size: 20),
         ),
         const SizedBox(height: 8),
         Text(
-          title,
+          '${amount.toInt()} F',
           style: const TextStyle(
+            color: Colors.white,
             fontSize: 12,
-            color: Colors.grey,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        const SizedBox(height: 4),
         Text(
-          '${amount.toInt()} F',
+          title,
           style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: color,
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 11,
           ),
         ),
       ],
@@ -309,56 +357,112 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Widget _buildFilterChips() {
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _filters.length,
-        itemBuilder: (context, index) {
-          final filter = _filters[index];
-          return Container(
-            margin: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(
-                filter,
-                style: TextStyle(
-                  color: _selectedFilter == filter ? Colors.white : const Color(0xFF1A237E),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              selected: _selectedFilter == filter,
-              onSelected: (selected) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Filtrer par type',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: textDark,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _filters.map((filter) {
+            final isSelected = _selectedFilter == filter;
+            return GestureDetector(
+              onTap: () {
                 setState(() {
                   _selectedFilter = filter;
                 });
               },
-              backgroundColor: Colors.white,
-              selectedColor: const Color(0xFF1A237E),
-              checkmarkColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: _selectedFilter == filter ? const Color(0xFF1A237E) : Colors.grey[300]!,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? primaryColor : surfaceWhite,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected ? primaryColor : Colors.grey[300]!,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  filter,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : textDark,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTransactionsSection() {
+    final transactions = _filteredTransactions;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Transactions Récentes',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: textDark,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${transactions.length} transactions',
+                style: TextStyle(
+                  color: primaryColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        transactions.isEmpty
+            ? _buildEmptyState()
+            : _buildTransactionsList(),
+
+        const SizedBox(height: 10),
+      ],
     );
   }
 
   Widget _buildTransactionsList() {
-    if (_filteredTransactions.isEmpty) {
-      return _buildEmptyState();
-    }
-
     // Grouper les transactions par date
     final Map<String, List<Map<String, dynamic>>> groupedTransactions = {};
 
     for (final transaction in _filteredTransactions) {
-      final dateKey = transaction['date'].split(' ')[0]; // Prendre seulement la partie date
+      final dateKey = transaction['date'].split(' ')[0];
       if (!groupedTransactions.containsKey(dateKey)) {
         groupedTransactions[dateKey] = [];
       }
@@ -369,14 +473,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
     final sortedDates = groupedTransactions.keys.toList()
       ..sort((a, b) => b.compareTo(a));
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: sortedDates.length,
-      itemBuilder: (context, index) {
-        final date = sortedDates[index];
-        final transactions = groupedTransactions[date]!;
-
-        return Column(
+    return Column(
+      children: [
+        ...sortedDates.map((date) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // En-tête de date
@@ -384,23 +483,21 @@ class _TransactionScreenState extends State<TransactionScreen> {
               padding: const EdgeInsets.symmetric(vertical: 16.0),
               child: Text(
                 _formatDateHeader(date),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A237E),
+                  color: textDark,
                 ),
               ),
             ),
 
             // Liste des transactions pour cette date
-            ...transactions.map((transaction) =>
+            ...groupedTransactions[date]!.map((transaction) =>
                 _buildTransactionItem(transaction)
             ),
-
-            const SizedBox(height: 16),
           ],
-        );
-      },
+        )),
+      ],
     );
   }
 
@@ -412,64 +509,45 @@ class _TransactionScreenState extends State<TransactionScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
+        color: surfaceWhite,
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Row(
         children: [
-          // Icône avec statut
-          Stack(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: transaction['color'].withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  transaction['icon'],
-                  color: transaction['color'],
-                  size: 24,
-                ),
-              ),
-              if (isPending)
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.orange,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.schedule,
-                      color: Colors.white,
-                      size: 12,
-                    ),
-                  ),
-                ),
-            ],
+          // Icône avec fond coloré
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: transaction['color'].withOpacity(0.1),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              transaction['icon'],
+              color: transaction['color'],
+              size: 24,
+            ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 15),
 
-          // Détails de la transaction
+          // Informations
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   transaction['clientName'],
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
+                    color: textDark,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -478,8 +556,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
                     Text(
                       transaction['typeText'],
                       style: TextStyle(
-                        fontSize: 14,
                         color: transaction['color'],
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -488,14 +566,14 @@ class _TransactionScreenState extends State<TransactionScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.orange.withOpacity(0.1),
+                          color: warningOrange.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           'En attente',
                           style: TextStyle(
                             fontSize: 10,
-                            color: Colors.orange,
+                            color: warningOrange,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -505,24 +583,16 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 const SizedBox(height: 4),
                 Text(
                   _formatDisplayDate(transaction['date']),
-                  style: const TextStyle(
+                  style: TextStyle(
+                    color: textGray,
                     fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  transaction['account'],
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey,
                   ),
                 ),
               ],
             ),
           ),
 
-          // Montant et actions
+          // Montant
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -534,20 +604,20 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   color: transaction['color'],
                 ),
               ),
-              const SizedBox(height: 8),
-              InkWell(
+              const SizedBox(height: 4),
+              GestureDetector(
                 onTap: () => _showTransactionDetails(transaction),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1A237E).withOpacity(0.1),
+                    color: primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Détails',
                     style: TextStyle(
                       fontSize: 10,
-                      color: Color(0xFF1A237E),
+                      color: primaryColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -561,31 +631,36 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 50),
+      decoration: BoxDecoration(
+        color: surfaceWhite,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.receipt_long,
-            size: 80,
-            color: Colors.grey,
+          Icon(
+            Icons.receipt_long_rounded,
+            color: textGray.withOpacity(0.4),
+            size: 60,
           ),
           const SizedBox(height: 16),
           Text(
             _selectedFilter == 'Toutes'
                 ? 'Aucune transaction'
                 : 'Aucune transaction ${_selectedFilter.toLowerCase()}',
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.grey,
-              fontWeight: FontWeight.bold,
+            style: TextStyle(
+              color: textDark,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Vos transactions apparaîtront ici',
             style: TextStyle(
-              color: Colors.grey,
+              color: textGray,
+              fontSize: 14,
             ),
           ),
         ],
@@ -597,27 +672,38 @@ class _TransactionScreenState extends State<TransactionScreen> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+        child: Container(
+          padding: const EdgeInsets.all(25),
+          decoration: BoxDecoration(
+            color: surfaceWhite,
+            borderRadius: BorderRadius.circular(25),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Rechercher une transaction',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1A237E),
+                  color: textDark,
                 ),
               ),
               const SizedBox(height: 20),
-              TextField(
-                decoration: InputDecoration(
-                  hintText: 'Nom du client, montant...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: backgroundLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Nom du client, montant...',
+                    hintStyle: TextStyle(color: textGray),
+                    border: InputBorder.none,
+                    prefixIcon: Icon(Icons.search_rounded, color: primaryColor),
                   ),
                 ),
               ),
@@ -627,8 +713,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A237E),
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   child: const Text('RECHERCHER'),
                 ),
@@ -640,64 +730,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
-  void _showFilterOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Filtrer les transactions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A237E),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ..._filters.map((filter) =>
-                ListTile(
-                  leading: Icon(
-                    _getFilterIcon(filter),
-                    color: const Color(0xFF1A237E),
-                  ),
-                  title: Text(filter),
-                  trailing: _selectedFilter == filter
-                      ? const Icon(Icons.check, color: Color(0xFF1A237E))
-                      : null,
-                  onTap: () {
-                    setState(() {
-                      _selectedFilter = filter;
-                    });
-                    Navigator.of(context).pop();
-                  },
-                ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  IconData _getFilterIcon(String filter) {
-    switch (filter) {
-      case 'Reçus':
-        return Icons.arrow_downward;
-      case 'Retraits':
-        return Icons.arrow_upward;
-      case 'Transferts':
-        return Icons.swap_horiz;
-      default:
-        return Icons.list;
-    }
-  }
-
   void _showTransactionDetails(Map<String, dynamic> transaction) {
     showModalBottomSheet(
       context: context,
@@ -705,7 +737,11 @@ class _TransactionScreenState extends State<TransactionScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(25),
+        decoration: BoxDecoration(
+          color: surfaceWhite,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -752,10 +788,10 @@ class _TransactionScreenState extends State<TransactionScreen> {
                       ),
                       Text(
                         '${transaction['amount']} FCFA',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A237E),
+                          color: textDark,
                         ),
                       ),
                     ],
@@ -784,8 +820,12 @@ class _TransactionScreenState extends State<TransactionScreen> {
                   _shareReceipt(transaction);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1A237E),
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: const Text('PARTAGER LE REÇU'),
               ),
@@ -803,17 +843,18 @@ class _TransactionScreenState extends State<TransactionScreen> {
         children: [
           Text(
             '$label:',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.w600,
-              color: Colors.grey,
+              color: textGray,
             ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w500,
+                color: textDark,
               ),
               textAlign: TextAlign.right,
             ),
@@ -828,7 +869,9 @@ class _TransactionScreenState extends State<TransactionScreen> {
       SnackBar(
         content: Text('Reçu de ${transaction['clientName']} partagé'),
         duration: const Duration(seconds: 2),
-        backgroundColor: const Color(0xFF1A237E),
+        backgroundColor: primaryColor,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }
