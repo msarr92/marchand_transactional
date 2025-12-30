@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class TransactionScreen extends StatefulWidget {
   const TransactionScreen({super.key});
@@ -7,21 +8,28 @@ class TransactionScreen extends StatefulWidget {
   State<TransactionScreen> createState() => _TransactionScreenState();
 }
 
-class _TransactionScreenState extends State<TransactionScreen> {
+class _TransactionScreenState extends State<TransactionScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
+
   String _selectedFilter = 'Toutes';
   final List<String> _filters = ['Toutes', 'Reçus', 'Retraits', 'Transferts'];
 
   // Utiliser les mêmes couleurs que AcceuilScreen
-  static const Color primaryColor = Color(0xFF2563EB); // Bleu vif
-  static const Color secondaryColor = Color(0xFF059669); // Vert émeraude
-  static const Color accentColor = Color(0xFFEA580C); // Orange vif
-  static const Color backgroundLight = Color(0xFFF0F9FF); // Bleu très clair
-  static const Color surfaceWhite = Color(0xFFFFFFFF); // Surface blanche
-  static const Color textDark = Color(0xFF0F172A); // Texte foncé
-  static const Color textGray = Color(0xFF475569); // Texte secondaire
-  static const Color successGreen = Color(0xFF059669);
-  static const Color errorRed = Color(0xFFDC2626);
-  static const Color warningOrange = Color(0xFFEA580C);
+  static const Color primaryBlue = Color(0xFF2563EB);
+  static const Color primaryLightBlue = Color(0xFF3B82F6);
+  static const Color primaryOrange = Color(0xFFEA580C);
+  static const Color successGreen = Color(0xFF10B981);
+  static const Color errorRed = Color(0xFFEF4444);
+  static const Color warningOrange = Color(0xFFF59E0B);
+  static const Color surfaceWhite = Color(0xFFFFFFFF);
+  static const Color surfaceLight = Color(0xFFF1F5F9);
+  static const Color textDark = Color(0xFF0F172A);
+  static const Color textGray = Color(0xFF64748B);
+  static const Color borderColor = Color(0xFFE2E8F0);
+  static const Color lightBlue = Color(0xFFE0F2FE);
 
   // Données simulées des transactions
   final List<Map<String, dynamic>> _allTransactions = [
@@ -68,7 +76,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'type': 'transfert',
       'date': '2024-01-16 09:15',
       'icon': Icons.swap_horiz_rounded,
-      'color': primaryColor,
+      'color': primaryBlue,
       'typeText': 'Transfert envoyé',
       'status': 'success',
       'account': 'Free Money',
@@ -116,7 +124,7 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'type': 'transfert',
       'date': '2024-01-14 17:15',
       'icon': Icons.swap_horiz_rounded,
-      'color': primaryColor,
+      'color': primaryBlue,
       'typeText': 'Transfert envoyé',
       'status': 'pending',
       'account': 'Orange Money',
@@ -146,6 +154,38 @@ class _TransactionScreenState extends State<TransactionScreen> {
       'account': 'Compte Principal',
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.6, curve: Curves.easeInOut),
+      ),
+    );
+
+    _slideAnimation = Tween<double>(begin: 30.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.8, curve: Curves.easeOut),
+      ),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
 
   List<Map<String, dynamic>> get _filteredTransactions {
     if (_selectedFilter == 'Toutes') {
@@ -221,30 +261,328 @@ class _TransactionScreenState extends State<TransactionScreen> {
     }
   }
 
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: color,
+        content: Row(
+          children: [
+            Icon(
+              color == successGreen ? Icons.check_circle_rounded : Icons.info_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              message,
+              style: GoogleFonts.poppins(color: Colors.white),
+            ),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
+        margin: const EdgeInsets.all(20),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundLight,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
+    return AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        return Scaffold(
+          backgroundColor: surfaceWhite,
+          body: Stack(
+            children: [
+              // Arrière-plan avec effets (même que acceuil)
+              Positioned(
+                top: -100,
+                right: -100,
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        primaryBlue.withOpacity(0.15),
+                        primaryOrange.withOpacity(0.08),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.1, 0.5, 0.8],
+                      radius: 0.8,
+                    ),
+                  ),
+                ),
+              ),
+
+              Positioned(
+                bottom: -150,
+                left: -100,
+                child: Container(
+                  width: 400,
+                  height: 400,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        primaryOrange.withOpacity(0.1),
+                        primaryBlue.withOpacity(0.05),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.1, 0.6, 0.9],
+                    ),
+                  ),
+                ),
+              ),
+
+              SafeArea(
                 child: Column(
                   children: [
-                    // Statistiques rapides (même style que la carte solde)
-                    _buildQuickStats(),
-                    const SizedBox(height: 25),
+                    // Header fixe avec animation
+                    Transform.translate(
+                      offset: Offset(0, _slideAnimation.value),
+                      child: Opacity(
+                        opacity: _fadeAnimation.value,
+                        child: _buildHeader(),
+                      ),
+                    ),
 
-                    // Filtres
-                    _buildFilterChips(),
-                    const SizedBox(height: 25),
+                    // Contenu défilable
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(top: 16, bottom: 24),
+                        child: Transform.translate(
+                          offset: Offset(0, _slideAnimation.value),
+                          child: Opacity(
+                            opacity: _fadeAnimation.value,
+                            child: Column(
+                              children: [
+                                // Statistiques rapides
+                                _buildQuickStats(),
 
-                    // Transactions
-                    _buildTransactionsSection(),
+                                // Filtres
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                                  child: _buildFilterChips(),
+                                ),
+
+                                // Transactions
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                                  child: _buildTransactionsSection(),
+                                ),
+
+                                const SizedBox(height: 80),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: surfaceWhite,
+        border: Border(
+          bottom: BorderSide(color: borderColor, width: 1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Bouton retour
+          // Container(
+          //   width: 50,
+          //   height: 50,
+          //   decoration: BoxDecoration(
+          //     color: surfaceLight,
+          //     borderRadius: BorderRadius.circular(16),
+          //     boxShadow: [
+          //       BoxShadow(
+          //         color: Colors.black.withOpacity(0.05),
+          //         blurRadius: 10,
+          //         offset: const Offset(0, 4),
+          //       ),
+          //     ],
+          //   ),
+          //   child: Material(
+          //     color: Colors.transparent,
+          //     borderRadius: BorderRadius.circular(16),
+          //     child: InkWell(
+          //       onTap: () => Navigator.pop(context),
+          //       borderRadius: BorderRadius.circular(16),
+          //       child: const Icon(
+          //         Icons.arrow_back_ios_new_rounded,
+          //         color: Color(0xFF2563EB),
+          //         size: 20,
+          //       ),
+          //     ),
+          //   ),
+          // ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Transactions',
+                  style: GoogleFonts.poppins(
+                    color: textDark,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Historique complet de vos transactions',
+                  style: GoogleFonts.poppins(
+                    color: textGray,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Bouton recherche
+          // Container(
+          //   width: 50,
+          //   height: 50,
+          //   decoration: BoxDecoration(
+          //     color: surfaceLight,
+          //     borderRadius: BorderRadius.circular(16),
+          //     boxShadow: [
+          //       BoxShadow(
+          //         color: Colors.black.withOpacity(0.05),
+          //         blurRadius: 10,
+          //         offset: const Offset(0, 4),
+          //       ),
+          //     ],
+          //   ),
+          //   child: Material(
+          //     color: Colors.transparent,
+          //     borderRadius: BorderRadius.circular(16),
+          //     child: InkWell(
+          //       onTap: _showSearchDialog,
+          //       borderRadius: BorderRadius.circular(16),
+          //       child: const Icon(
+          //         Icons.search_rounded,
+          //         color: Color(0xFF64748B),
+          //         size: 22,
+          //       ),
+          //     ),
+          //   ),
+          // ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickStats() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: primaryBlue.withOpacity(0.3),
+              blurRadius: 25,
+              offset: const Offset(0, 12),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Titre
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Résumé des Transactions',
+                  style: GoogleFonts.poppins(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.bar_chart_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Statistiques
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStatItem('Reçus', _totalReceived, Icons.trending_up_rounded, successGreen),
+                  _buildStatItem('Retraits', _totalWithdrawn, Icons.trending_down_rounded, errorRed),
+                  _buildStatItem('Transferts', _totalTransferred, Icons.swap_horiz_rounded, primaryOrange),
+                ],
               ),
             ),
           ],
@@ -253,103 +591,41 @@ class _TransactionScreenState extends State<TransactionScreen> {
     );
   }
 
-
-
-  Widget _buildQuickStats() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(25),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
-        ),
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Titre
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Résumé des Transactions',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.9),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.bar_chart_rounded,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Statistiques
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildStatItem('Reçus', _totalReceived, Icons.trending_up_rounded, successGreen),
-                _buildStatItem('Retraits', _totalWithdrawn, Icons.trending_down_rounded, errorRed),
-                _buildStatItem('Transferts', _totalTransferred, Icons.swap_horiz_rounded, accentColor),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildStatItem(String title, double amount, IconData icon, Color color) {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
             color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          child: Icon(icon, color: color, size: 20),
+          child: Icon(icon, color: color, size: 24),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Text(
           '${amount.toInt()} F',
-          style: const TextStyle(
+          style: GoogleFonts.poppins(
             color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
           ),
         ),
+        const SizedBox(height: 4),
         Text(
           title,
-          style: TextStyle(
+          style: GoogleFonts.poppins(
             color: Colors.white.withOpacity(0.8),
-            fontSize: 11,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -362,46 +638,61 @@ class _TransactionScreenState extends State<TransactionScreen> {
       children: [
         Text(
           'Filtrer par type',
-          style: TextStyle(
+          style: GoogleFonts.poppins(
             fontSize: 18,
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
             color: textDark,
+            letterSpacing: -0.5,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 4),
+        Text(
+          'Choisissez le type de transaction à afficher',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: textGray,
+          ),
+        ),
+        const SizedBox(height: 16),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: _filters.map((filter) {
             final isSelected = _selectedFilter == filter;
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  _selectedFilter = filter;
-                });
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected ? primaryColor : surfaceWhite,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected ? primaryColor : Colors.grey[300]!,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+            return Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedFilter = filter;
+                  });
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? primaryBlue : surfaceWhite,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected ? primaryBlue : borderColor,
+                      width: 1.5,
                     ),
-                  ],
-                ),
-                child: Text(
-                  filter,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : textDark,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 14,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isSelected ? 0.1 : 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    filter,
+                    style: GoogleFonts.poppins(
+                      color: isSelected ? Colors.white : textDark,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
@@ -422,37 +713,46 @@ class _TransactionScreenState extends State<TransactionScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Transactions Récentes',
-              style: TextStyle(
+              'Transactions récentes',
+              style: GoogleFonts.poppins(
                 fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w800,
                 color: textDark,
+                letterSpacing: -0.5,
               ),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
+                color: primaryBlue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 '${transactions.length} transactions',
-                style: TextStyle(
-                  color: primaryColor,
-                  fontSize: 12,
+                style: GoogleFonts.poppins(
+                  color: primaryBlue,
+                  fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 4),
+        Text(
+          'Liste complète de vos transactions',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: textGray,
+          ),
+        ),
+        const SizedBox(height: 20),
 
         transactions.isEmpty
             ? _buildEmptyState()
             : _buildTransactionsList(),
 
-        const SizedBox(height: 10),
+        const SizedBox(height: 20),
       ],
     );
   }
@@ -479,13 +779,13 @@ class _TransactionScreenState extends State<TransactionScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // En-tête de date
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               child: Text(
                 _formatDateHeader(date),
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w700,
                   color: textDark,
                 ),
               ),
@@ -502,7 +802,6 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   Widget _buildTransactionItem(Map<String, dynamic> transaction) {
-    final isSuccess = transaction['status'] == 'success';
     final isPending = transaction['status'] == 'pending';
 
     return Container(
@@ -510,71 +809,81 @@ class _TransactionScreenState extends State<TransactionScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: surfaceWhite,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor, width: 1.5),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
             blurRadius: 10,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Row(
         children: [
-          // Icône avec fond coloré
           Container(
-            width: 50,
-            height: 50,
+            width: 56,
+            height: 56,
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: transaction['color'].withOpacity(0.1),
-              borderRadius: BorderRadius.circular(14),
+              color: (transaction['color'] as Color).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: (transaction['color'] as Color).withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: Icon(
-              transaction['icon'],
-              color: transaction['color'],
-              size: 24,
-            ),
+            child: Icon(transaction['icon'] as IconData, color: transaction['color'] as Color, size: 24),
           ),
-          const SizedBox(width: 15),
-
-          // Informations
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction['clientName'],
-                  style: TextStyle(
+                  transaction['clientName'] as String,
+                  style: GoogleFonts.poppins(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                     color: textDark,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
                   children: [
-                    Text(
-                      transaction['typeText'],
-                      style: TextStyle(
-                        color: transaction['color'],
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: (transaction['color'] as Color).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        transaction['typeText'] as String,
+                        style: GoogleFonts.poppins(
+                          color: transaction['color'] as Color,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 8),
                     if (isPending)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
                           color: warningOrange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           'En attente',
-                          style: TextStyle(
-                            fontSize: 10,
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
                             color: warningOrange,
-                            fontWeight: FontWeight.w500,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -582,8 +891,8 @@ class _TransactionScreenState extends State<TransactionScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _formatDisplayDate(transaction['date']),
-                  style: TextStyle(
+                  _formatDisplayDate(transaction['date'] as String),
+                  style: GoogleFonts.poppins(
                     color: textGray,
                     fontSize: 12,
                   ),
@@ -591,34 +900,37 @@ class _TransactionScreenState extends State<TransactionScreen> {
               ],
             ),
           ),
-
-          // Montant
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
                 '${transaction['amount']} F',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: transaction['color'],
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 17,
+                  color: transaction['color'] as Color,
                 ),
               ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: () => _showTransactionDetails(transaction),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'Détails',
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: primaryColor,
-                      fontWeight: FontWeight.w500,
+              const SizedBox(height: 8),
+              Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+                child: InkWell(
+                  onTap: () => _showTransactionDetails(transaction),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: primaryBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Détails',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: primaryBlue,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -632,33 +944,57 @@ class _TransactionScreenState extends State<TransactionScreen> {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 50),
+      padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 20),
       decoration: BoxDecoration(
         color: surfaceWhite,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: borderColor, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.receipt_long_rounded,
-            color: textGray.withOpacity(0.4),
-            size: 60,
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: primaryBlue.withOpacity(0.1),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: primaryBlue.withOpacity(0.2),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.receipt_long_rounded,
+              color: primaryBlue,
+              size: 40,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           Text(
             _selectedFilter == 'Toutes'
                 ? 'Aucune transaction'
                 : 'Aucune transaction ${_selectedFilter.toLowerCase()}',
-            style: TextStyle(
+            style: GoogleFonts.poppins(
               color: textDark,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Vos transactions apparaîtront ici',
-            style: TextStyle(
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
               color: textGray,
               fontSize: 14,
             ),
@@ -669,170 +1005,398 @@ class _TransactionScreenState extends State<TransactionScreen> {
   }
 
   void _showSearchDialog() {
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-        child: Container(
-          padding: const EdgeInsets.all(25),
-          decoration: BoxDecoration(
-            color: surfaceWhite,
-            borderRadius: BorderRadius.circular(25),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Rechercher une transaction',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: textDark,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.7),
+      transitionDuration: const Duration(milliseconds: 500),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: animation,
+            child: Dialog(
+              insetPadding: const EdgeInsets.all(24),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Container(
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: backgroundLight,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Nom du client, montant...',
-                    hintStyle: TextStyle(color: textGray),
-                    border: InputBorder.none,
-                    prefixIcon: Icon(Icons.search_rounded, color: primaryColor),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [surfaceWhite, lightBlue.withOpacity(0.5)],
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 40,
+                      spreadRadius: 5,
                     ),
-                  ),
-                  child: const Text('RECHERCHER'),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: primaryBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryBlue.withOpacity(0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.search_rounded,
+                        color: primaryBlue,
+                        size: 36,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Rechercher une transaction',
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: textDark,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Trouvez rapidement vos transactions',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: textGray,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: surfaceWhite,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: borderColor, width: 1.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: TextField(
+                        decoration: InputDecoration(
+                          hintText: 'Nom, montant, date...',
+                          hintStyle: GoogleFonts.poppins(color: textGray),
+                          border: InputBorder.none,
+                          prefixIcon: Icon(Icons.search_rounded, color: primaryBlue),
+                        ),
+                        style: GoogleFonts.poppins(color: textDark),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Material(
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => Navigator.of(context).pop(),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'ANNULER',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: textGray,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryBlue.withOpacity(0.4),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.of(context).pop();
+                                  _showSnackBar('Recherche effectuée', successGreen);
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(18),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.search_rounded, color: Colors.white, size: 20),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'RECHERCHER',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
   void _showTransactionDetails(Map<String, dynamic> transaction) {
-    showModalBottomSheet(
+    showGeneralDialog(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(25),
-        decoration: BoxDecoration(
-          color: surfaceWhite,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.7),
+      transitionDuration: const Duration(milliseconds: 500),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: animation,
+            child: Dialog(
+              insetPadding: const EdgeInsets.all(24),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
               child: Container(
-                width: 60,
-                height: 4,
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [surfaceWhite, lightBlue.withOpacity(0.5)],
+                  ),
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 40,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // En-tête
+                    Container(
+                      width: 100,
+                      height: 100,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: (transaction['color'] as Color).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (transaction['color'] as Color).withOpacity(0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        transaction['icon'] as IconData,
+                        color: transaction['color'] as Color,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    Text(
+                      'Détails de la transaction',
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: textDark,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    Text(
+                      transaction['typeText'] as String,
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: transaction['color'] as Color,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+
+                    Text(
+                      '${transaction['amount']} F',
+                      style: GoogleFonts.poppins(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Détails
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: primaryBlue.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: primaryBlue.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        children: [
+                          _buildDetailRow('Client', transaction['clientName'] as String),
+                          const SizedBox(height: 12),
+                          _buildDetailRow('Date', _formatDisplayDate(transaction['date'] as String)),
+                          const SizedBox(height: 12),
+                          _buildDetailRow('Compte', transaction['account'] as String),
+                          const SizedBox(height: 12),
+                          _buildDetailRow('Statut', transaction['status'] == 'success' ? 'Réussi' : 'En attente'),
+                          const SizedBox(height: 12),
+                          _buildDetailRow('ID Transaction', transaction['id'] as String),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Boutons d'action
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Material(
+                            borderRadius: BorderRadius.circular(16),
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => Navigator.of(context).pop(),
+                              borderRadius: BorderRadius.circular(16),
+                              child: Container(
+                                padding: const EdgeInsets.all(18),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    'FERMER',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: textGray,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFF2563EB), Color(0xFF3B82F6)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: primaryBlue.withOpacity(0.4),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(16),
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.of(context).pop();
+                                  _showSnackBar('Reçu partagé avec succès', successGreen);
+                                },
+                                borderRadius: BorderRadius.circular(16),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(18),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.share_rounded, color: Colors.white, size: 20),
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        'PARTAGER',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-
-            // En-tête
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: transaction['color'].withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    transaction['icon'],
-                    color: transaction['color'],
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        transaction['typeText'],
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: transaction['color'],
-                        ),
-                      ),
-                      Text(
-                        '${transaction['amount']} FCFA',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: textDark,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Détails
-            _buildDetailRow('Client', transaction['clientName']),
-            _buildDetailRow('Date', _formatDisplayDate(transaction['date'])),
-            _buildDetailRow('Compte', transaction['account']),
-            _buildDetailRow('Statut', transaction['status'] == 'success' ? 'Réussi' : 'En attente'),
-            _buildDetailRow('ID Transaction', transaction['id']),
-
-            const SizedBox(height: 30),
-
-            // Boutons d'action
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _shareReceipt(transaction);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text('PARTAGER LE REÇU'),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -841,37 +1405,29 @@ class _TransactionScreenState extends State<TransactionScreen> {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Text(
-            '$label:',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: textGray,
-            ),
-          ),
-          const SizedBox(width: 8),
           Expanded(
             child: Text(
+              '$label:',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                color: textGray,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 2,
+            child: Text(
               value,
-              style: TextStyle(
+              style: GoogleFonts.poppins(
                 fontWeight: FontWeight.w500,
                 color: textDark,
+                fontSize: 14,
               ),
-              textAlign: TextAlign.right,
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  void _shareReceipt(Map<String, dynamic> transaction) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Reçu de ${transaction['clientName']} partagé'),
-        duration: const Duration(seconds: 2),
-        backgroundColor: primaryColor,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
   }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:marchand/auth/registrer_screen.dart';
 
+import '../navigation/bottom_navigation.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -99,7 +101,12 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => _isLoading = false);
 
     // En production, vous navigueriez vers l'écran principal
-    // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => HomeScreen()));
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const BottomNavigation(selectedIndex: 0),
+      ),
+    );
 
     _showSuccessMessage();
   }
@@ -393,96 +400,7 @@ class _LoginScreenState extends State<LoginScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // En-tête avec animation
-                          Row(
-                            children: [
-                              // Bouton retour avec effet
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: surfaceWhite,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: InkWell(
-                                    onTap: _isLoading ? null : () => Navigator.pop(context),
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: const Icon(
-                                      Icons.arrow_back_ios_new_rounded,
-                                      color: Color(0xFF2563EB),
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const Spacer(),
-
-                              // Animation du logo
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 500),
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      primaryBlue.withOpacity(0.1),
-                                      primaryLightBlue.withOpacity(0.05),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: primaryBlue.withOpacity(0.2),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [primaryBlue, primaryLightBlue],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: const Icon(
-                                        Icons.account_balance_wallet_rounded,
-                                        color: Colors.white,
-                                        size: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Text(
-                                      "Ond Money",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: primaryBlue,
-                                        letterSpacing: -0.3,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
                           const SizedBox(height: 40),
-
                           // Titre avec effet de glissement
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

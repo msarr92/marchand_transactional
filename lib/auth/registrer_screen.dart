@@ -1,7 +1,12 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // Pour kIsWeb
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:typed_data';
 
 import 'package:marchand/auth/login_screen.dart';
 
@@ -26,7 +31,8 @@ class _RegisterScreenState extends State<RegisterScreen>
   bool _hasImage = false;
   bool _isTermsAccepted = false;
   bool _showPasswordStrength = false;
-  File? _selectedImageFile;
+  XFile? _selectedImageFile; // Changé de File à XFile pour compatibilité web
+  Uint8List? _selectedImageBytes; // Pour stocker les bytes sur le web
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -41,6 +47,9 @@ class _RegisterScreenState extends State<RegisterScreen>
   final Color surfaceWhite = const Color(0xFFFFFFFF);
   final Color textDark = const Color(0xFF0F172A);
   final Color textGray = const Color(0xFF64748B);
+
+  // URL de votre API GraphQL
+  static const String _graphqlUrl = 'http://localhost:8082/graphql';
 
   @override
   void initState() {
@@ -79,6 +88,303 @@ class _RegisterScreenState extends State<RegisterScreen>
     super.dispose();
   }
 
+  /// Méthode améliorée pour les requêtes GraphQL avec timeout et retry
+
+  // Future<Map<String, dynamic>> _graphqlRequest({
+  //   required String query,
+  //   Map<String, dynamic>? variables,
+  //   int retryCount = 2,
+  // }) async {
+  //   for (int attempt = 0; attempt <= retryCount; attempt++) {
+  //     try {
+  //       print(' Tentative ${attempt + 1}/${retryCount + 1} vers $_graphqlUrl');
+  //
+  //       final client = http.Client();
+  //       final request = http.Request('POST', Uri.parse(_graphqlUrl));
+  //
+  //       request.headers['Content-Type'] = 'application/json';
+  //       request.headers['Accept'] = 'application/json';
+  //
+  //       request.body = json.encode({
+  //         'query': query,
+  //         'variables': variables,
+  //       });
+  //
+  //       // Timeout de 10 secondes
+  //       final streamedResponse = await client.send(request).timeout(
+  //         const Duration(seconds: 10),
+  //         onTimeout: () {
+  //           throw TimeoutException('Timeout après 10 secondes');
+  //         },
+  //       );
+  //
+  //       final response = await http.Response.fromStream(streamedResponse);
+  //       client.close();
+  //
+  //       print('📡 Status Code: ${response.statusCode}');
+  //       print('📡 Response Headers: ${response.headers}');
+  //       print('📡 Response Body: ${response.body}');
+  //
+  //       if (response.statusCode == 200 || response.statusCode == 201) {
+  //         try {
+  //           final Map<String, dynamic> data = json.decode(response.body);
+  //
+  //           if (data.containsKey('errors')) {
+  //             final errors = data['errors'] as List;
+  //             final errorMessage = errors.isNotEmpty
+  //                 ? errors[0]['message']
+  //                 : 'Erreur GraphQL inconnue';
+  //
+  //             print('❌ Erreurs GraphQL: $errorMessage');
+  //             return {
+  //               'success': false,
+  //               'message': errorMessage,
+  //               'errors': errors,
+  //             };
+  //           }
+  //
+  //           return {
+  //             'success': true,
+  //             'data': data['data'] ?? {},
+  //           };
+  //         } catch (e) {
+  //           print('❌ Erreur de parsing JSON: $e');
+  //           return {
+  //             'success': false,
+  //             'message': 'Erreur de parsing JSON: $e',
+  //           };
+  //         }
+  //       } else {
+  //         print('❌ Erreur HTTP ${response.statusCode}: ${response.body}');
+  //         return {
+  //           'success': false,
+  //           'message': 'Erreur HTTP ${response.statusCode}',
+  //           'body': response.body,
+  //           'statusCode': response.statusCode,
+  //         };
+  //       }
+  //     } on TimeoutException catch (e) {
+  //       print('⏰ Timeout: $e');
+  //       if (attempt == retryCount) {
+  //         return {
+  //           'success': false,
+  //           'message': 'Timeout: Le serveur ne répond pas',
+  //         };
+  //       }
+  //       await Future.delayed(const Duration(seconds: 1));
+  //     } on SocketException catch (e) {
+  //       print('🔌 SocketException: $e');
+  //       if (attempt == retryCount) {
+  //         return {
+  //           'success': false,
+  //           'message': 'Connexion impossible. Vérifiez:\n1. Le serveur est démarré\n2. Le port est correct\n3. Pas de firewall',
+  //         };
+  //       }
+  //       await Future.delayed(const Duration(seconds: 1));
+  //     } catch (e) {
+  //       print('❌ Exception: $e');
+  //       if (attempt == retryCount) {
+  //         return {
+  //           'success': false,
+  //           'message': 'Erreur: $e',
+  //         };
+  //       }
+  //       await Future.delayed(const Duration(seconds: 1));
+  //     }
+  //   }
+  //
+  //   return {
+  //     'success': false,
+  //     'message': 'Toutes les tentatives ont échoué',
+  //   };
+  // }
+
+
+  Future<Map<String, dynamic>> _graphqlRequest({
+    required String query,                     // Requête GraphQL (query ou mutation)
+    Map<String, dynamic>? variables,            // Variables GraphQL (optionnelles)
+    int retryCount = 2,                         // Nombre de réessais en cas d’échec
+  }) async {
+
+    // Boucle de retry : tentatives successives
+    for (int attempt = 0; attempt <= retryCount; attempt++) {
+      try {
+        print('🔁 Tentative ${attempt + 1}/${retryCount + 1} vers $_graphqlUrl');
+
+        // Création du client HTTP
+        final client = http.Client();
+
+        // Création de la requête POST vers l’endpoint GraphQL
+        final request = http.Request(
+          'POST',
+          Uri.parse(_graphqlUrl),
+        );
+
+        // Headers requis pour GraphQL en JSON
+        request.headers['Content-Type'] = 'application/json';
+        request.headers['Accept'] = 'application/json';
+
+        // Corps de la requête GraphQL
+        request.body = json.encode({
+          'query': query,            // Requête GraphQL
+          'variables': variables,    // Variables associées
+        });
+
+        // Envoi de la requête avec timeout de 10 secondes
+        final streamedResponse = await client.send(request).timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            // Déclenche une exception si le serveur ne répond pas
+            throw TimeoutException('Timeout après 10 secondes');
+          },
+        );
+
+        // Conversion de la réponse streamée en réponse HTTP classique
+        final response = await http.Response.fromStream(streamedResponse);
+
+        // Fermeture du client pour éviter les fuites mémoire
+        client.close();
+
+        // Logs de debug réseau
+        print('📡 Status Code: ${response.statusCode}');
+        print('📡 Response Headers: ${response.headers}');
+        print('📡 Response Body: ${response.body}');
+
+        // Vérification du code HTTP
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          try {
+            // Parsing du JSON retourné par le serveur
+            final Map<String, dynamic> data = json.decode(response.body);
+
+            // Gestion des erreurs GraphQL (même avec HTTP 200)
+            if (data.containsKey('errors')) {
+              final errors = data['errors'] as List;
+
+              // Récupération du premier message d’erreur GraphQL
+              final errorMessage = errors.isNotEmpty
+                  ? errors[0]['message']
+                  : 'Erreur GraphQL inconnue';
+
+              print('❌ Erreurs GraphQL: $errorMessage');
+
+              return {
+                'success': false,
+                'message': errorMessage,
+                'errors': errors,
+              };
+            }
+
+            // Cas succès : données GraphQL valides
+            return {
+              'success': true,
+              'data': data['data'] ?? {},
+            };
+          } catch (e) {
+            // Erreur lors du parsing JSON
+            print('❌ Erreur de parsing JSON: $e');
+
+            return {
+              'success': false,
+              'message': 'Erreur de parsing JSON: $e',
+            };
+          }
+        } else {
+          // Erreur HTTP (400, 500, etc.)
+          print('❌ Erreur HTTP ${response.statusCode}: ${response.body}');
+
+          return {
+            'success': false,
+            'message': 'Erreur HTTP ${response.statusCode}',
+            'body': response.body,
+            'statusCode': response.statusCode,
+          };
+        }
+
+      } on TimeoutException catch (e) {
+        // Gestion spécifique du timeout
+        print('⏰ Timeout: $e');
+
+        if (attempt == retryCount) {
+          return {
+            'success': false,
+            'message': 'Timeout: Le serveur ne répond pas',
+          };
+        }
+
+        // Pause avant le prochain retry
+        await Future.delayed(const Duration(seconds: 1));
+
+      } on SocketException catch (e) {
+        // Erreur réseau (serveur éteint, port incorrect, pas d’internet)
+        print('🔌 SocketException: $e');
+
+        if (attempt == retryCount) {
+          return {
+            'success': false,
+            'message':
+            'Connexion impossible. Vérifiez:\n'
+                '1. Le serveur est démarré\n'
+                '2. Le port est correct\n'
+                '3. Pas de firewall',
+          };
+        }
+
+        await Future.delayed(const Duration(seconds: 1));
+
+      } catch (e) {
+        // Gestion de toute autre exception inattendue
+        print('❌ Exception: $e');
+
+        if (attempt == retryCount) {
+          return {
+            'success': false,
+            'message': 'Erreur: $e',
+          };
+        }
+
+        await Future.delayed(const Duration(seconds: 1));
+      }
+    }
+
+    // Cas extrême : toutes les tentatives ont échoué
+    return {
+      'success': false,
+      'message': 'Toutes les tentatives ont échoué',
+    };
+  }
+
+
+  /// Mutation pour créer un marchand - CORRIGÉE selon votre test Postman
+  Future<Map<String, dynamic>> _createMarchand() async {
+    const String mutation = '''
+      mutation CreateMarchand(\$input: MarchandInput!) {
+        createMarchand(input: \$input) {
+          id
+          nomBoutique
+          logoBoutique
+          password
+        }
+      }
+    ''';
+
+    final variables = {
+      'input': {
+        'nomBoutique': _nomBoutiqueController.text.trim(),
+        'logoBoutique': _hasImage ? 'uploaded_logo.jpg' : '', // TODO: Uploader l'image
+        'password': _passwordController.text,
+        'telephone': _telephoneController.text.trim(),
+      },
+    };
+
+    print('📤 Envoi GraphQL avec variables: $variables');
+
+    return await _graphqlRequest(
+      query: mutation,
+      variables: variables,
+    );
+  }
+
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(
@@ -89,8 +395,10 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
 
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _selectedImageFile = File(pickedFile.path);
+        _selectedImageFile = pickedFile;
+        _selectedImageBytes = bytes;
         _hasImage = true;
       });
       _showImageSuccess();
@@ -107,8 +415,10 @@ class _RegisterScreenState extends State<RegisterScreen>
     );
 
     if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _selectedImageFile = File(pickedFile.path);
+        _selectedImageFile = pickedFile;
+        _selectedImageBytes = bytes;
         _hasImage = true;
       });
       _showImageSuccess();
@@ -116,15 +426,62 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   void _showImageSuccess() {
+    _showSnackBar('Photo ajoutée avec succès !', successGreen);
+  }
+
+  void _removeImage() {
+    setState(() {
+      _selectedImageFile = null;
+      _selectedImageBytes = null;
+      _hasImage = false;
+    });
+  }
+
+  /// Méthode pour afficher l'image de manière compatible avec toutes les plateformes
+  Widget _buildPlatformAwareImage() {
+    if (kIsWeb) {
+      // Pour le web, utilisez Image.memory avec les bytes
+      return _selectedImageBytes != null
+          ? Image.memory(
+        _selectedImageBytes!,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+      )
+          : Container(
+        color: Colors.grey[200],
+        child: const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+      );
+    } else {
+      // Pour mobile/desktop, utilisez Image.file
+      return _selectedImageFile != null
+          ? Image.file(
+        File(_selectedImageFile!.path),
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,
+      )
+          : Container(
+        color: Colors.grey[200],
+        child: const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+      );
+    }
+  }
+
+  void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: successGreen,
+        backgroundColor: color,
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
+            Icon(
+              color == successGreen ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
             const SizedBox(width: 10),
             Text(
-              'Photo ajoutée avec succès !',
+              message,
               style: GoogleFonts.poppins(color: Colors.white),
             ),
           ],
@@ -135,13 +492,6 @@ class _RegisterScreenState extends State<RegisterScreen>
         margin: const EdgeInsets.all(20),
       ),
     );
-  }
-
-  void _removeImage() {
-    setState(() {
-      _selectedImageFile = null;
-      _hasImage = false;
-    });
   }
 
   void _showImagePickerOptions() {
@@ -224,6 +574,58 @@ class _RegisterScreenState extends State<RegisterScreen>
                           ],
                         ),
                         const SizedBox(height: 32),
+
+                        // Bouton pour tester la connexion GraphQL
+                        Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            gradient: LinearGradient(
+                              colors: [
+                                primaryBlue.withOpacity(0.1),
+                                primaryLightBlue.withOpacity(0.05),
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            borderRadius: BorderRadius.circular(16),
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                                //_testConnection();
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.wifi, color: Colors.blue, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Tester GraphQL',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: primaryBlue,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
 
                         Container(
                           width: double.infinity,
@@ -359,9 +761,12 @@ class _RegisterScreenState extends State<RegisterScreen>
     if (value == null || value.isEmpty) {
       return 'Veuillez entrer votre numéro de téléphone';
     }
-    final regex = RegExp(r'^(77|76|70|78|75)\d{7}$');
-    if (!regex.hasMatch(value.replaceAll(' ', ''))) {
-      return 'Format invalide (ex: 77 123 45 67)';
+    // Supprimer les espaces pour la validation
+    final cleanValue = value.replaceAll(' ', '');
+    // Format international ou local
+    final regex = RegExp(r'^(\+221)?(77|76|70|78|75)\d{7}$');
+    if (!regex.hasMatch(cleanValue)) {
+      return 'Format invalide (ex: +221771234567 ou 771234567)';
     }
     return null;
   }
@@ -390,44 +795,36 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   void _handleSignUp() async {
-    if (!_formKey.currentState!.validate() || !_isTermsAccepted) {
-      if (!_isTermsAccepted) {
-        _showErrorSnackBar('Veuillez accepter les conditions d\'utilisation');
-      }
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (!_isTermsAccepted) {
+      _showSnackBar('Veuillez accepter les conditions d\'utilisation', errorRed);
       return;
     }
 
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() => _isLoading = false);
-    _showSuccessDialog();
+
+    try {
+      final result = await _createMarchand();
+
+      if (result['success'] == true) {
+        final data = result['data'];
+        final marchand = data['createMarchand'];
+
+        _showSuccessDialog(marchand);
+      } else {
+        _showSnackBar('Erreur: ${result['message']}', errorRed);
+      }
+    } catch (e) {
+      _showSnackBar('Exception: $e', errorRed);
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: errorRed,
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: GoogleFonts.poppins(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 3),
-        margin: const EdgeInsets.all(20),
-      ),
-    );
-  }
-
-  void _showSuccessDialog() {
+  void _showSuccessDialog(Map<String, dynamic> marchand) {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -492,7 +889,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                     const SizedBox(height: 32),
 
                     Text(
-                      'Félicitations ! 🎉',
+                      'Félicitations ! ',
                       style: GoogleFonts.poppins(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -503,14 +900,68 @@ class _RegisterScreenState extends State<RegisterScreen>
                     const SizedBox(height: 16),
 
                     Text(
-                      'Votre boutique a été créée avec succès. Préparez-vous à gérer vos finances facilement.',
+                      'Votre boutique a été créée avec succès!',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.poppins(
-                        fontSize: 15,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
                         color: textGray,
-                        height: 1.6,
                       ),
                     ),
+
+                    const SizedBox(height: 12),
+
+                    // Détails du marchand créé
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[50],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: primaryBlue.withOpacity(0.2)),
+                      ),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.store, color: primaryBlue, size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Boutique:',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: textDark,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                marchand['nomBoutique'] ?? '',
+                                style: GoogleFonts.poppins(color: textGray),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.phone, color: primaryBlue, size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Téléphone:',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  color: textDark,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _telephoneController.text,
+                                style: GoogleFonts.poppins(color: textGray),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
                     const SizedBox(height: 32),
 
                     Container(
@@ -536,7 +987,12 @@ class _RegisterScreenState extends State<RegisterScreen>
                         child: InkWell(
                           onTap: () {
                             Navigator.of(context).pop();
-                            Navigator.of(context).pop();
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const LoginScreen(),
+                              ),
+                            );
                           },
                           borderRadius: BorderRadius.circular(20),
                           child: Padding(
@@ -545,7 +1001,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Commencer l\'aventure',
+                                  'Se connecter maintenant',
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -636,37 +1092,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                           // En-tête avec animation
                           Row(
                             children: [
-                              // Bouton retour avec effet
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: surfaceWhite,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 15,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: InkWell(
-                                    onTap: _isLoading ? null : () => Navigator.pop(context),
-                                    borderRadius: BorderRadius.circular(16),
-                                    child: const Icon(
-                                      Icons.arrow_back_ios_new_rounded,
-                                      color: Color(0xFF2563EB),
-                                      size: 20,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const Spacer(),
-
                               // Animation du logo
                               AnimatedContainer(
                                 duration: const Duration(milliseconds: 500),
@@ -881,12 +1306,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       children: [
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(18),
-                                          child: Image.file(
-                                            _selectedImageFile!,
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                            fit: BoxFit.cover,
-                                          ),
+                                          child: _buildPlatformAwareImage(),
                                         ),
                                         // Overlay avec bouton
                                         Positioned.fill(
@@ -1395,7 +1815,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
-          hintText: 'Numéro de téléphone',
+          hintText: 'Numéro de téléphone (ex: +221771234567)',
           hintStyle: GoogleFonts.poppins(
             fontSize: 16,
             color: textGray.withOpacity(0.6),
@@ -1801,7 +2221,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    req.substring(2), // Enlever le ✓ ou ✗
+                    req.substring(2),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       color: isMet ? successGreen : errorRed,
